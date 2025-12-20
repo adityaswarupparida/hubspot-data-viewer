@@ -17,4 +17,18 @@ model User {
   id        String  @id @default(uuid())
   username  String  @unique
   password  String
+  accesses  IntegrationAccess[]
+}
+
+model IntegrationAccess {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  type      IntegrationType 
+}
+
+enum IntegrationType {
+  HUBSPOT
 }

@@ -6,6 +6,13 @@ export const getContacts = async (userId: string) => {
     const token = await getAccessToken(userId);
 
     try { 
+        const propertiesResponse = await axios.get(`${HUBSPOT_URL}/crm/v3/properties/contacts`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        console.log(propertiesResponse.data);
         const searchResponse = await axios.post(`${HUBSPOT_URL}/crm/v3/objects/contacts/search`, {
             "limit": "0",
             "filterGroups": [

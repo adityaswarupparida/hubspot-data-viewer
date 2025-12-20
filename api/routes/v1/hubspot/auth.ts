@@ -45,7 +45,7 @@ router.get("/oauth-callback", async (req, res) => {
         
         const userId = JSON.parse(state).id;
         await exchangeOAuthGrantForTokens(userId, authData);
-        res.redirect(`/`);
+        res.redirect(`http://localhost:3001`);
     }
 
 });
