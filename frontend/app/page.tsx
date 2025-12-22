@@ -1,4 +1,4 @@
-import { FaHubspot } from "react-icons/fa";
+import { Dashboard } from "./components/Dashboard";
 
 export default function Home() {
   return (
@@ -19,13 +19,7 @@ export default function Home() {
         </div>
       </div>
       <div className="flex justify-center items-center h-full relative">
-        <div className="absolute px-12 py-6 w-full h-full z-10">
-          <div className="bg-gray-100 w-full h-full rounded-lg"></div>
-        </div>
-        <button className="flex gap-2 text-xl items-center bg-white hover:bg-orange-100 px-9 py-3 rounded-lg cursor-pointer z-20">
-          <div className="font-medium">Login with HubSpot</div>
-          <FaHubspot size={30} className="text-orange-500"/>
-        </button>
+        <Dashboard />
       </div>   
     </div>
   );
