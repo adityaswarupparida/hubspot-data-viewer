@@ -2,10 +2,15 @@ import axios from "axios";
 import { HUBSPOT_URL } from "../../config";
 import { getAccessToken } from "./auth";
 
+export const getProperties = async (userId: string, objectType: string) => {
+    const token = await getAccessToken(userId);
+}
+
 export const getContacts = async (userId: string) => {
     const token = await getAccessToken(userId);
 
     try { 
+        // https://api.hubapi.com/properties/v1/contacts/properties
         const propertiesResponse = await axios.get(`${HUBSPOT_URL}/crm/v3/properties/contacts`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -42,8 +47,12 @@ export const getContacts = async (userId: string) => {
 
         console.log(response.data);
         // console.log(`Next paging link:: ` + response.data.paging.next.link);
+        console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
 
-        return response.data;
+        return { 
+            records: response.data.results,
+            properties: propertiesResponse.data.results 
+        };
     } catch (err) {
         console.error(`Error while retrieving contacts`);
 

@@ -5,7 +5,7 @@ import { middleware } from "../../middleware";
 const router = Router();
 router.use(middleware)
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
     const access = await prisma.integrationAccess.findFirst({
         where: {
             userId: req.userId,
@@ -27,18 +27,18 @@ router.get("/", async (req, res) => {
     });
 });
 
-router.post("/", async (req, res) => {
-    await prisma.integrationAccess.create({
-        data: {
-            userId: req.userId as string,
-            type: req.body.type,
-            expiresAt: req.body.expiresAt
-        }
-    });
+// router.post("/", async (req, res) => {
+//     await prisma.integrationAccess.create({
+//         data: {
+//             userId: req.userId as string,
+//             type: req.body.type,
+//             expiresAt: req.body.expiresAt
+//         }
+//     });
     
-    res.json({
-        active: true
-    });
-});
+//     res.json({
+//         active: true
+//     });
+// });
 
 export default router;

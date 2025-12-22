@@ -41,13 +41,13 @@ export const refreshAccessToken = async (userId: string) => {
     console.log(refreshToken);
     if (!refreshToken) return;
 
-    const authData = {
+    const authData = new URLSearchParams({
         grant_type: 'refresh_token',
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
         redirect_uri: REDIRECT_URI,
         code: refreshToken
-    };
+    });
 
     await exchangeOAuthGrantForTokens(userId, authData);
 }
