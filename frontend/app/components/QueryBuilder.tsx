@@ -17,13 +17,16 @@ export const QueryBuilder = ({ properties }: {
 }) => {
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
+    const [selected, setSelected] = useState<string[]>([]);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
 
-    const options = [
+    const MAX_VISIBLE = 8;
+    const options = !properties.length ? [
         { value: 'contacts', label: 'Contacts' },
         { value: 'carts', label: 'Carts' }
-    ]
+    ] : properties.map(p => ({ value: p.name, label: p.label}));
+    
     const operatorOptions = [
         { id: 1, value: 'EQ', label: 'equals to' },
         { id: 2, value: 'NEQ', label: 'not equals to' },
@@ -50,7 +53,7 @@ export const QueryBuilder = ({ properties }: {
 
     const removeFilter = (index: number) => {
         setFilters(prev => prev.filter((_, idx) => idx !== index));
-    }
+    } 
 
     return (
         <div className="py-2 mx-auto w-full h-full relative">
@@ -140,37 +143,50 @@ export const QueryBuilder = ({ properties }: {
                     <div className="p-1 h-full relative overflow-hidden">
                         <div className="flex justify-between gap-2 mb-1">
                             <input type="text" className="border flex-1 px-3 py-1 text-sm border-gray-200 rounded focus:outline-2 outline-orange-500" value={fieldFilter} onChange={(e) => setFieldFilter(e.target.value)} placeholder="Search fields..."></input>
-                            <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs">Select All</button>
+                            <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs"
+                                onClick={() => {
+                                    if (!selectAll) {
+                                        setSelected(properties.map(p => p.name))
+                                        setSelectAll(true)
+                                    } else {
+                                        setSelected([])
+                                        setSelectAll(false)
+                                    }
+                                }}
+                            >
+                                {selectAll ? `Deselect All` : `Select All`}
+                            </button>
                         </div>
                         <div className="h-full w-full overflow-y-auto px-2">
                             {properties.length > 0 && 
                                 properties.filter(p => !p.hidden && p.label.toLowerCase().includes(fieldFilter.toLowerCase()))
                                           .map(p => (
-                                <div className="flex gap-2">
-                                    <input type="checkbox" className="accent-orange-300"/>
-                                    <div className="text-xs font-bold">{p.label} <span>({p.type})</span></div>
+                                <div key={p.name}>
+                                    <label className="flex gap-2">
+                                        <input type="checkbox" value={p.name} className="accent-gray-200" checked={selected.includes(p.name)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelected(prev => [...prev, p.name])
+                                                } else {
+                                                    setSelected(prev => prev.filter(s => s !== p.name))
+                                                }
+                                            }}
+                                        />
+                                        <div className="text-xs font-bold">{p.label} <span className="text-gray-500 font-semibold">({p.type})</span></div>
+                                    </label>
                                 </div>
                             ))}
-                            {/* <div className="flex gap-2">
-                                <input type="checkbox" />
-                                <div className="text-xs font-bold">First Name <span>(string)</span></div>
-                            </div>
-                            <div className="flex gap-2">
-                                <input type="checkbox" />
-                                <div className="text-xs font-bold">Last Name <span>(string)</span></div>
-                            </div>
-                            <div className="flex gap-2">
-                                <input type="checkbox" />
-                                <div className="text-xs font-bold">Date of Birth <span>(string)</span></div>
-                            </div>
-                            <div className="flex gap-2">
-                                <input type="checkbox" />
-                                <div className="text-xs font-bold">Address <span>(string)</span></div>
-                            </div> */}
                         </div>
-                        {/* <div className="absolute h-24 w-full bg-red-300 bottom-0 left-0">
-
-                        </div> */}
+                        {selected.length > 0 && (
+                            <div className="absolute max-h-20 w-full bg-white px-1 py-2 bottom-0 left-0 flex flex-wrap gap-1 wrap-normal">
+                                {selected.slice(0, MAX_VISIBLE).map((s, index) => (
+                                    <div key={index} className="bg-gray-200 rounded-lg px-2 text-xs">{s}</div>
+                                ))}
+                                {selected.length - MAX_VISIBLE > 0 && (
+                                    <div className="bg-gray-200 rounded-lg px-2 text-xs">+{Math.min(selected.length - MAX_VISIBLE, 10)}</div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -236,7 +252,7 @@ export const QueryBuilder = ({ properties }: {
                     <div className="bg-gray-200 rounded w-full h-60"></div>
                 </div>
             </div>}
-            <div className="absolute bottom-0 left-0 w-full px-3 pb-1">
+            <div className="absolute bottom-0 left-0 w-full px-3 pb-2">
                 <button className="flex gap-2 w-full items-center border py-2 justify-center bg-orange-500 hover:bg-orange-600 rounded cursor-pointer text-white font-bold text-sm">
                     <FaPlay /> Run Query
                 </button>

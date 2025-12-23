@@ -74,8 +74,8 @@ export const DataTable = ({ properties, records }: {
     })
 
     return (
-        <div className="overflow-hidden h-full">
-            <div className="text-lg tracking-tighter font-semibold pl-3 py-2">
+        <div className="overflow-hidden h-full px-3">
+            <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
                 Query Results ({records.length} records)
             </div>
         <div className="overflow-x-auto">
