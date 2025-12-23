@@ -58,7 +58,7 @@ export const Dashboard = () => {
     return (
         <div className="flex justify-center items-center w-full h-full">
             <div className="px-12 py-6 w-full h-full">
-                <div className="bg-orange-100 hover:bg-orange-200 w-full h-full rounded-lg">
+                <div className="w-full h-full rounded-lg">
                     <HubSpotDashboard />
                 </div>
             </div>

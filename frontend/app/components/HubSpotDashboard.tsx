@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { CRMObjectProperty, CRMObjectRecord, DataTable } from "./DataTable";
 import { LoadContacts } from "../utils";
+import { QueryBuilder } from "./QueryBuilder";
 
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
@@ -27,35 +28,11 @@ export const HubSpotDashboard = () => {
     }, []);
 
     return (
-        <div className="w-full h-full flex bg-red-100 rounded-lg">
-            <div className="w-64 h-full rounded-l-lg bg-amber-100"></div>
-            <div className="w-full h-full">
-                {/* <table className="w-full border border-collapse border-gray-500">
-                    <thead>
-                        <tr>
-                            <th>
-                                Contact
-                            </th>
-                             <th>
-                                Contact
-                            </th>
-                             <th>
-                                Contact
-                            </th>
-                             <th>
-                                Contact
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>6</td>
-                            <td>7</td>
-                            <td>8</td>
-                            <td>9</td>
-                        </tr>
-                    </tbody>
-                </table> */}
+        <div className="w-full h-full flex gap-3 rounded-lg">
+            <div className="w-1/4 shrink-0 h-full rounded-lg bg-white shadow-2xl">
+                <QueryBuilder properties={columns}/>
+            </div>
+            <div className="flex-1 h-full bg-white rounded-lg shadow-2xl overflow-hidden">
                 { !loading && <DataTable records={data} properties={columns}/>}
             </div>
         </div>

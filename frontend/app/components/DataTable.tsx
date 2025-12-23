@@ -74,14 +74,18 @@ export const DataTable = ({ properties, records }: {
     })
 
     return (
+        <div className="overflow-hidden h-full">
+            <div className="text-lg tracking-tighter font-semibold pl-3 py-2">
+                Query Results ({records.length} records)
+            </div>
         <div className="overflow-x-auto">
-            <table className="border-collapse">
-                <thead className="bg-gray-200">
+            <table className="border-collapse text-sm">
+                <thead className="bg-gray-100">
                     {table.getHeaderGroups().map(hg => (
                         <tr key={hg.id}>
                             {hg.headers.map(header => (
                                 <th key={header.id}
-                                    className="border px-2"
+                                    className="border border-gray-300 px-2 py-1"
                                 >
                                     {flexRender(
                                         header.column.columnDef.header,
@@ -94,21 +98,24 @@ export const DataTable = ({ properties, records }: {
                 </thead>
                 <tbody>
                     {table.getRowModel().rows.map(row => (
-                        <tr key={row.id} className="bg-white hover:bg-gray-50">
+                        <tr key={row.id} className="bg-white hover:bg-orange-50">
                             {row.getVisibleCells().map(cell => (
                                 <td key={cell.id} 
-                                    className="border w-40 text-md px-2 text-nowrap"
+                                    className="border border-gray-300 w-52 text-md px-2 py-1"
                                 >
-                                    {flexRender(
-                                        cell.column.columnDef.cell,
-                                        cell.getContext()
-                                    )}
+                                    <div className="truncate w-52">
+                                        {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext()
+                                        )}
+                                    </div>
                                 </td>
                             ))}
                         </tr>
                     ))}
                 </tbody>
             </table>
+        </div>
         </div>
     );
 }
