@@ -4,6 +4,8 @@ import {
     ColumnDef, 
     flexRender
 } from "@tanstack/react-table";
+import { useContext } from "react";
+import { QueryContext } from "../providers/QueryProvider";
 
 // export type DataTableProps<T> = {
 //   columns: ColumnDef<T, any>[];
@@ -43,7 +45,7 @@ export type CRMObjectProperty = {
 const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[]): ColumnDef<CRMObjectRecord>[] => {
     const set = new Set<string>();
     if (records.length > 0) {
-        for (const [key, value] of Object.entries(records[0].properties)) {
+        for (const [key, _] of Object.entries(records[0].properties)) {
             set.add(key);
         }
     }
@@ -61,18 +63,20 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
         }));
 }
 
-export const DataTable = ({ properties, records }: { 
-    properties: CRMObjectProperty[];
+export const DataTable = ({ records }: { 
     records: CRMObjectRecord[] 
 }) => {
     // console.log(properties, records);
+    const ctx = useContext(QueryContext)
+    if (!ctx) return;
+    const { columns: properties } = ctx;
     const columns = buildColumns(properties, records);
     const table = useReactTable({
         data: records,
         columns,
         getCoreRowModel: getCoreRowModel(),
     })
-
+    console.log(properties, records);
     return (
         <div className="overflow-hidden h-full px-3">
             <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">

@@ -2,9 +2,11 @@
 import { FaPlay } from "react-icons/fa6";
 import { RiDeleteBin5Line } from "react-icons/ri";
 import { CRMObjectProperty } from "./DataTable";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import Select from 'react-select';
 import { selectStyles } from "./styles/reactSelect";
+import { QueryContext } from "../providers/QueryProvider";
+import { LoadProperties } from "../utils";
 
 type FilterRule = {
     field: string;
@@ -12,20 +14,39 @@ type FilterRule = {
     value: string;
 }
 
-export const QueryBuilder = ({ properties }: { 
-    properties:  CRMObjectProperty[]
+export type Query = {
+    object_type: string;
+    properties: string[];
+    limit: number;
+}
+
+export const QueryBuilder = ({ objects }: {
+    objects: any[], 
+    // properties:  CRMObjectProperty[],
+    // run: boolean,
+    // setRun: Dispatch<SetStateAction<boolean>>
 }) => {
+    const ctx = useContext(QueryContext)
+    if (!ctx) return;
+    const { columns, setColumns, run, setRun } = ctx;
+    const [properties, setProperties] = useState<CRMObjectProperty[]>([]);
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
     const [selected, setSelected] = useState<string[]>([]);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
+    const [selectedObj, setSelectedObj] = useState<string>("");
 
     const MAX_VISIBLE = 8;
-    const options = !properties.length ? [
+    const options = !properties.length ? [] : 
+        properties.map(p => ({ value: p.name, label: p.label}));
+    
+    const objectOptions = !objects.length ? [
         { value: 'contacts', label: 'Contacts' },
-        { value: 'carts', label: 'Carts' }
-    ] : properties.map(p => ({ value: p.name, label: p.label}));
+        { value: 'companies', label: 'Companies' },
+        { value: 'deals', label: 'Deals' },
+        { value: 'tickets', label: 'Tickets' }
+    ] : objects.map(o => ({ value: o.name, label: o.labels.plural }));
     
     const operatorOptions = [
         { id: 1, value: 'EQ', label: 'equals to' },
@@ -53,7 +74,24 @@ export const QueryBuilder = ({ properties }: {
 
     const removeFilter = (index: number) => {
         setFilters(prev => prev.filter((_, idx) => idx !== index));
-    } 
+    }
+    
+    useEffect(() => {
+        if (!selectedObj.trim().length) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            return;
+        }
+
+        const loadProperties = async () => {
+            const response = await LoadProperties(token, selectedObj);
+            if (!response) return;
+            setProperties(response);
+        }
+
+        loadProperties();
+    }, [selectedObj]);
 
     return (
         <div className="py-2 mx-auto w-full h-full relative">
@@ -84,8 +122,12 @@ export const QueryBuilder = ({ properties }: {
                             // ${state.isSelected ? `bg-orange-200`: ``}
                             // `
                         }} 
-                        options={options}
+                        options={objectOptions}
                         placeholder={`Choose an object`}
+                        onChange={(newValue: any) => { 
+                            console.log(newValue);
+                            setSelectedObj(newValue.value);
+                        }}
                         styles={{
                             control: (base, state) => ({
                                 ...base,
@@ -146,11 +188,13 @@ export const QueryBuilder = ({ properties }: {
                             <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs"
                                 onClick={() => {
                                     if (!selectAll) {
-                                        setSelected(properties.map(p => p.name))
-                                        setSelectAll(true)
+                                        setSelected(properties.map(p => p.name));
+                                        setColumns(properties);
+                                        setSelectAll(true);
                                     } else {
-                                        setSelected([])
-                                        setSelectAll(false)
+                                        setSelected([]);
+                                        setColumns([]);
+                                        setSelectAll(false);
                                     }
                                 }}
                             >
@@ -167,8 +211,10 @@ export const QueryBuilder = ({ properties }: {
                                             onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setSelected(prev => [...prev, p.name])
+                                                    setColumns(prev => [...prev, p])
                                                 } else {
                                                     setSelected(prev => prev.filter(s => s !== p.name))
+                                                    setColumns(prev => prev.filter(c => c.name !== p.name ))
                                                 }
                                             }}
                                         />
@@ -247,13 +293,31 @@ export const QueryBuilder = ({ properties }: {
                 </div>
             </div>
             {showQuery && <div className="mb-2 px-3">
-                <div>
+                <div className="overflow-hidden">
                     <div className="font-semibold tracking-tight">Query (HubSpot API Format)</div>
-                    <div className="bg-gray-200 rounded w-full h-60"></div>
+                    <div className="bg-gray-100 text-black font-mono rounded w-full max-h-60 overflow-auto px-6 py-4 text-xs whitespace-pre-wrap">
+                        {JSON.stringify({ 
+                            object_type: "contacts",
+                            properties: [
+                                "firstname",
+                                "lastname",
+                                "email",
+                                "phone",
+                                "company",
+                                "jobtitle",
+                                "lifecyclestage",
+                                "createdate"
+                            ],                
+                            limit: 100
+                         }, null, 2)}
+                    </div>
                 </div>
             </div>}
             <div className="absolute bottom-0 left-0 w-full px-3 pb-2">
-                <button className="flex gap-2 w-full items-center border py-2 justify-center bg-orange-500 hover:bg-orange-600 rounded cursor-pointer text-white font-bold text-sm">
+                <button className="flex gap-2 w-full items-center border py-2 justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600/30 disabled:cursor-not-allowed rounded cursor-pointer text-white font-bold text-sm"
+                    onClick={() => setRun(true)}
+                    disabled={run || !selectedObj}
+                >
                     <FaPlay /> Run Query
                 </button>
             </div>

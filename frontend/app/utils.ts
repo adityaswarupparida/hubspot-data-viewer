@@ -15,12 +15,36 @@ export const CheckAccess = async (token: string): Promise<boolean> => {
     return response.data.active;
 }
 
-export const LoadContacts = async (token: string): Promise<any> => {
-    const response = await axios.get(`${BACKEND_URL}/hubspot/crm/contacts`, {
+export const LoadObjects = async (token: string): Promise<any> => {
+    const response = await axios.get(`${BACKEND_URL}/hubspot/crm/objects`, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         }
+    });
+
+    return response.data.payload;
+}
+
+export const LoadProperties = async (token: string, objectType: string): Promise<any> => {
+    const response = await axios.get(`${BACKEND_URL}/hubspot/crm/properties/${objectType}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    return response.data.payload;
+}
+
+export const LoadContacts = async (token: string, params: any): Promise<any> => {
+    const response = await axios.post(`${BACKEND_URL}/hubspot/crm/contacts`, {
+        params 
+    }, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
     });
 
     return response.data.payload;

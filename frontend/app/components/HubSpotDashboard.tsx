@@ -1,13 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { LuDatabase } from "react-icons/lu";
 import { CRMObjectProperty, CRMObjectRecord, DataTable } from "./DataTable";
-import { LoadContacts } from "../utils";
+import { LoadContacts, LoadObjects } from "../utils";
 import { QueryBuilder } from "./QueryBuilder";
+import { QueryContext } from "../providers/QueryProvider";
 
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
-    const [columns, setColumns] = useState<CRMObjectProperty[]>([]);
+    // const [columns, setColumns] = useState<CRMObjectProperty[]>([]);
+    const ctx = useContext(QueryContext)
+    if (!ctx) return;
+    const { columns, setColumns, run, setRun } = ctx;
+
+    const [objects, setObjects] = useState<any[]>([]);
+    // const [run, setRun] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,27 +22,50 @@ export const HubSpotDashboard = () => {
         if (!token) {
             return;
         }
+        
+        const loadObjects = async () => {
+            const payload = await LoadObjects(token);
+            if (!payload) return;
+            setObjects(payload)
+            // setLoading(false)
+        }
+
+        loadObjects();
+    }, []);
+
+    useEffect(() => {
+        if (!run) return;
+        
+        const token = localStorage.getItem("token");
+        if (!token) {
+            return;
+        }
 
         const loadContacts = async () => {
-            const payload = await LoadContacts(token);
+            const params = {
+                properties: columns.map(c => c.name),
+                limit: 100,
+            }
+            const payload = await LoadContacts(token, params);
             if (!payload) return;
             if (payload.records) 
                 setData(payload.records);
-            if (payload.properties) 
-                setColumns(payload.properties);
+            // if (payload.properties) 
+            //     setColumns(payload.properties);
             setLoading(false);
         }
 
-        loadContacts()     
-    }, []);
+        loadContacts();
+
+    }, [run])
 
     return (
         <div className="w-full h-full flex gap-3 rounded-lg">
             <div className="w-1/4 shrink-0 h-full rounded-lg bg-white shadow-2xl">
-                <QueryBuilder properties={columns}/>
+                <QueryBuilder objects={objects} />
             </div>
             <div className="flex-1 h-full bg-white rounded-lg shadow-2xl overflow-hidden">
-                { !loading && <DataTable records={data} properties={columns}/>}
+                { !loading && run && <DataTable records={data} />}
                 { loading  && 
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                         <LuDatabase className="h-16 w-16 mb-4 opacity-20" />

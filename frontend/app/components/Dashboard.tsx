@@ -4,6 +4,7 @@ import { BACKEND_URL } from "../config";
 import { useEffect, useState } from "react";
 import { CheckAccess } from "../utils";
 import { HubSpotDashboard } from "./HubSpotDashboard";
+import { QueryContextProvider } from "../providers/QueryProvider";
 
 export const Dashboard = () => {
     const [hasAccess, setHasAccess] = useState(false);
@@ -59,7 +60,9 @@ export const Dashboard = () => {
         <div className="flex justify-center items-center w-full h-full">
             <div className="px-12 py-6 w-full h-full">
                 <div className="w-full h-full rounded-lg">
-                    <HubSpotDashboard />
+                    <QueryContextProvider >
+                        <HubSpotDashboard />
+                    </QueryContextProvider>
                 </div>
             </div>
         </div>
