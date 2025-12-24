@@ -4,6 +4,9 @@ import { CRMObjectProperty } from '../components/DataTable';
 type QueryContextValue = {
     columns: CRMObjectProperty[];
     setColumns: Dispatch<SetStateAction<CRMObjectProperty[]>>;
+    appliedColumns: CRMObjectProperty[];
+    setAppliedColumns: Dispatch<SetStateAction<CRMObjectProperty[]>>;
+
 
     run: boolean;
     setRun: Dispatch<SetStateAction<boolean>>;
@@ -14,6 +17,7 @@ export const QueryContextProvider = ({ children }: {
     children: ReactNode 
 }) => {
     const [columns, setColumns] = useState<CRMObjectProperty[]>([]);
+    const [appliedColumns, setAppliedColumns] = useState<CRMObjectProperty[]>([]);
     const [run, setRun] = useState<boolean>(false);
 
     return (
@@ -21,6 +25,8 @@ export const QueryContextProvider = ({ children }: {
             value={{ 
                 columns, 
                 setColumns,
+                appliedColumns,
+                setAppliedColumns,
                 run,
                 setRun 
             }}

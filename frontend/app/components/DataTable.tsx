@@ -58,7 +58,7 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
             accessorFn: (row) => row.properties[p.name],
             cell: ({ getValue }) => {
                 const value = getValue();
-                return String(value);
+                return !value ? `` : String(value);
             },
         }));
 }
@@ -69,7 +69,7 @@ export const DataTable = ({ records }: {
     // console.log(properties, records);
     const ctx = useContext(QueryContext)
     if (!ctx) return;
-    const { columns: properties } = ctx;
+    const { appliedColumns: properties } = ctx;
     const columns = buildColumns(properties, records);
     const table = useReactTable({
         data: records,

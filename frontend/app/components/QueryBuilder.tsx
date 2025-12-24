@@ -2,11 +2,12 @@
 import { FaPlay } from "react-icons/fa6";
 import { RiDeleteBin5Line } from "react-icons/ri";
 import { CRMObjectProperty } from "./DataTable";
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Select from 'react-select';
 import { selectStyles } from "./styles/reactSelect";
 import { QueryContext } from "../providers/QueryProvider";
 import { LoadProperties } from "../utils";
+import { Spinner } from "./Spinner";
 
 type FilterRule = {
     field: string;
@@ -22,9 +23,6 @@ export type Query = {
 
 export const QueryBuilder = ({ objects }: {
     objects: any[], 
-    // properties:  CRMObjectProperty[],
-    // run: boolean,
-    // setRun: Dispatch<SetStateAction<boolean>>
 }) => {
     const ctx = useContext(QueryContext)
     if (!ctx) return;
@@ -36,6 +34,8 @@ export const QueryBuilder = ({ objects }: {
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
     const [selectedObj, setSelectedObj] = useState<string>("");
+    const [query, setQuery] = useState<Partial<Query> | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const MAX_VISIBLE = 8;
     const options = !properties.length ? [] : 
@@ -78,9 +78,10 @@ export const QueryBuilder = ({ objects }: {
     
     useEffect(() => {
         if (!selectedObj.trim().length) return;
-
+        setLoading(true);
         const token = localStorage.getItem("token");
         if (!token) {
+            setLoading(false);
             return;
         }
 
@@ -88,8 +89,11 @@ export const QueryBuilder = ({ objects }: {
             const response = await LoadProperties(token, selectedObj);
             if (!response) return;
             setProperties(response);
+            setLoading(false);
         }
 
+        const newQuery: Partial<Query> = { object_type: selectedObj, properties: [], limit: 100 };
+        setQuery(newQuery);
         loadProperties();
     }, [selectedObj]);
 
@@ -190,10 +194,18 @@ export const QueryBuilder = ({ objects }: {
                                     if (!selectAll) {
                                         setSelected(properties.map(p => p.name));
                                         setColumns(properties);
+                                        setQuery(prev => ({
+                                            ...prev, 
+                                            properties: properties.map(p => p.name)
+                                        }));
                                         setSelectAll(true);
                                     } else {
                                         setSelected([]);
                                         setColumns([]);
+                                        setQuery(prev => ({
+                                            ...prev, 
+                                            properties: []
+                                        }));
                                         setSelectAll(false);
                                     }
                                 }}
@@ -202,7 +214,7 @@ export const QueryBuilder = ({ objects }: {
                             </button>
                         </div>
                         <div className="h-full w-full overflow-y-auto px-2">
-                            {properties.length > 0 && 
+                            {!loading && properties.length > 0 && 
                                 properties.filter(p => !p.hidden && p.label.toLowerCase().includes(fieldFilter.toLowerCase()))
                                           .map(p => (
                                 <div key={p.name}>
@@ -212,9 +224,17 @@ export const QueryBuilder = ({ objects }: {
                                                 if (e.target.checked) {
                                                     setSelected(prev => [...prev, p.name])
                                                     setColumns(prev => [...prev, p])
+                                                    setQuery(prev => ({
+                                                        ...prev, 
+                                                        properties: [...(prev?.properties ?? []), p.name]
+                                                    }));
                                                 } else {
                                                     setSelected(prev => prev.filter(s => s !== p.name))
                                                     setColumns(prev => prev.filter(c => c.name !== p.name ))
+                                                    setQuery(prev => ({
+                                                        ...prev, 
+                                                        properties: (prev?.properties ?? []).filter(pr => pr !== p.name)
+                                                    }));
                                                 }
                                             }}
                                         />
@@ -222,6 +242,11 @@ export const QueryBuilder = ({ objects }: {
                                     </label>
                                 </div>
                             ))}
+                            {loading && 
+                                <div className="flex justify-center items-center h-4/5">
+                                    <Spinner size="sm" />
+                                </div>
+                            }
                         </div>
                         {selected.length > 0 && (
                             <div className="absolute max-h-20 w-full bg-white px-1 py-2 bottom-0 left-0 flex flex-wrap gap-1 wrap-normal">
@@ -296,20 +321,8 @@ export const QueryBuilder = ({ objects }: {
                 <div className="overflow-hidden">
                     <div className="font-semibold tracking-tight">Query (HubSpot API Format)</div>
                     <div className="bg-gray-100 text-black font-mono rounded w-full max-h-60 overflow-auto px-6 py-4 text-xs whitespace-pre-wrap">
-                        {JSON.stringify({ 
-                            object_type: "contacts",
-                            properties: [
-                                "firstname",
-                                "lastname",
-                                "email",
-                                "phone",
-                                "company",
-                                "jobtitle",
-                                "lifecyclestage",
-                                "createdate"
-                            ],                
-                            limit: 100
-                         }, null, 2)}
+                        {query && JSON.stringify(query, null, 2)}
+                        {!query && ``}
                     </div>
                 </div>
             </div>}
@@ -318,7 +331,8 @@ export const QueryBuilder = ({ objects }: {
                     onClick={() => setRun(true)}
                     disabled={run || !selectedObj}
                 >
-                    <FaPlay /> Run Query
+                    {!run && <div className="flex gap-2 items-center tracking-tight"><FaPlay /> Run Query</div> }
+                    {run && <Spinner size="xs" /> }
                 </button>
             </div>
         </div>
