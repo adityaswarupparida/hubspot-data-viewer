@@ -50,19 +50,11 @@ export const getProperties = async (userId: string, objectType: string) => {
     }
 }
 
-export const getContacts = async (userId: string, params: any) => {
+export const getRecords = async (userId: string, objectType: string, params: any) => {
     const token = await getAccessToken(userId);
 
     try { 
-        // https://api.hubapi.com/properties/v1/contacts/properties
-        // const propertiesResponse = await axios.get(`${HUBSPOT_URL}/crm/v3/properties/contacts`, {
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${token}`
-        //     }
-        // });
-        // console.log(propertiesResponse.data);
-        const searchResponse = await axios.post(`${HUBSPOT_URL}/crm/v3/objects/contacts/search`, {
+        const searchResponse = await axios.post(`${HUBSPOT_URL}/crm/v3/objects/${objectType}/search`, {
             "limit": "0",
             "filterGroups": [
                 {
@@ -83,7 +75,7 @@ export const getContacts = async (userId: string, params: any) => {
         console.log(searchResponse.data); 
         console.log(params);
 
-        const response =  await axios.get(`${HUBSPOT_URL}/crm/v3/objects/contacts`, {
+        const response =  await axios.get(`${HUBSPOT_URL}/crm/v3/objects/${objectType}`, {
             params: new URLSearchParams(params),
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -92,14 +84,15 @@ export const getContacts = async (userId: string, params: any) => {
 
         console.log(response.data);
         // console.log(`Next paging link:: ` + response.data.paging.next.link);
-        console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
+        if (response.data.results.length > 0)
+            console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
 
         return { 
             count: searchResponse.data.results, 
             records: response.data.results,
         };
     } catch (err) {
-        console.error(`Error while retrieving contacts`);
+        console.error(`Error while retrieving ${objectType}`);
 
         if (axios.isAxiosError(err)) {
             console.log(`Error: ` + err.message);

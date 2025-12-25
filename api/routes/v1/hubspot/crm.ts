@@ -1,8 +1,8 @@
 import Router from "express"
 import { 
-    getContacts, 
     getObjects, 
-    getProperties 
+    getProperties, 
+    getRecords
 } from "../../../lib/hubspot/crm";
 import { middleware } from "../../../middleware";
 
@@ -30,23 +30,24 @@ router.get("/properties/:object_type", async (req, res) => {
     })
 });
 
-router.get("/contacts", async (req, res) => {
-    const userId = req.userId;
-    if (!userId) return;
-    const response = await getContacts(userId, "");
-    res.json({
-        message: "All contacts retrieved",
-        payload: response
-    })
-});
+// router.get("/contacts", async (req, res) => {
+//     const userId = req.userId;
+//     if (!userId) return;
+//     const response = await getContacts(userId, "");
+//     res.json({
+//         message: "All contacts retrieved",
+//         payload: response
+//     })
+// });
 
-router.post("/contacts", async (req, res) => {
+router.post("/records/:object_type", async (req, res) => {
     const userId = req.userId;
     if (!userId) return;
+    const objectType = req.params.object_type;
     const queryParams = req.body.params;
-    const response = await getContacts(userId, queryParams);
+    const response = await getRecords(userId, objectType, queryParams);
     res.json({
-        message: "All contacts retrieved",
+        message: `All records of ${objectType} are retrieved`,
         payload: response
     })
 });

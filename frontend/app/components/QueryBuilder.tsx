@@ -8,6 +8,7 @@ import { selectStyles } from "./styles/reactSelect";
 import { QueryContext } from "../providers/QueryProvider";
 import { LoadProperties } from "../utils";
 import { Spinner } from "./Spinner";
+import { useQuery } from "../hooks/useQuery";
 
 type FilterRule = {
     field: string;
@@ -24,16 +25,16 @@ export type Query = {
 export const QueryBuilder = ({ objects }: {
     objects: any[], 
 }) => {
-    const ctx = useContext(QueryContext)
-    if (!ctx) return;
-    const { columns, setColumns, run, setRun } = ctx;
+    // const ctx = useContext(QueryContext)
+    // if (!ctx) return;
+    const { columns, setColumns, selectedObject, setSelectedObject, run, setRun } = useQuery();
     const [properties, setProperties] = useState<CRMObjectProperty[]>([]);
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
     const [selected, setSelected] = useState<string[]>([]);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
-    const [selectedObj, setSelectedObj] = useState<string>("");
+    // const [selectedObject, setSelectedObject] = useState<string>("");
     const [query, setQuery] = useState<Partial<Query> | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -77,7 +78,7 @@ export const QueryBuilder = ({ objects }: {
     }
     
     useEffect(() => {
-        if (!selectedObj.trim().length) return;
+        if (!selectedObject.trim().length) return;
         setLoading(true);
         const token = localStorage.getItem("token");
         if (!token) {
@@ -86,16 +87,16 @@ export const QueryBuilder = ({ objects }: {
         }
 
         const loadProperties = async () => {
-            const response = await LoadProperties(token, selectedObj);
+            const response = await LoadProperties(token, selectedObject);
             if (!response) return;
             setProperties(response);
             setLoading(false);
         }
 
-        const newQuery: Partial<Query> = { object_type: selectedObj, properties: [], limit: 100 };
+        const newQuery: Partial<Query> = { object_type: selectedObject, properties: [], limit: 100 };
         setQuery(newQuery);
         loadProperties();
-    }, [selectedObj]);
+    }, [selectedObject]);
 
     return (
         <div className="py-2 mx-auto w-full h-full relative">
@@ -130,7 +131,7 @@ export const QueryBuilder = ({ objects }: {
                         placeholder={`Choose an object`}
                         onChange={(newValue: any) => { 
                             console.log(newValue);
-                            setSelectedObj(newValue.value);
+                            setSelectedObject(newValue.value);
                         }}
                         styles={{
                             control: (base, state) => ({
@@ -329,7 +330,7 @@ export const QueryBuilder = ({ objects }: {
             <div className="absolute bottom-0 left-0 w-full px-3 pb-2">
                 <button className="flex gap-2 w-full items-center border py-2 justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600/30 disabled:cursor-not-allowed rounded cursor-pointer text-white font-bold text-sm"
                     onClick={() => setRun(true)}
-                    disabled={run || !selectedObj}
+                    disabled={run || !selectedObject}
                 >
                     {!run && <div className="flex gap-2 items-center tracking-tight"><FaPlay /> Run Query</div> }
                     {run && <Spinner size="xs" /> }

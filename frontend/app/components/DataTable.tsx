@@ -6,6 +6,8 @@ import {
 } from "@tanstack/react-table";
 import { useContext } from "react";
 import { QueryContext } from "../providers/QueryProvider";
+import { useQuery } from "../hooks/useQuery";
+import { LuFileSearch } from "react-icons/lu";
 
 // export type DataTableProps<T> = {
 //   columns: ColumnDef<T, any>[];
@@ -63,13 +65,14 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
         }));
 }
 
-export const DataTable = ({ records }: { 
-    records: CRMObjectRecord[] 
+export const DataTable = ({ records, count }: { 
+    records: CRMObjectRecord[],
+    count: number 
 }) => {
     // console.log(properties, records);
-    const ctx = useContext(QueryContext)
-    if (!ctx) return;
-    const { appliedColumns: properties } = ctx;
+    // const ctx = useContext(QueryContext)
+    // if (!ctx) return;
+    const { appliedColumns: properties } = useQuery();
     const columns = buildColumns(properties, records);
     const table = useReactTable({
         data: records,
@@ -77,49 +80,60 @@ export const DataTable = ({ records }: {
         getCoreRowModel: getCoreRowModel(),
     })
     console.log(properties, records);
+    if (!count) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <LuFileSearch className="h-16 w-16 mb-4 opacity-20" />
+                <p className="text-lg font-medium text-gray-500">No Records Found</p>
+                <p className="text-sm mt-2 text-gray-500">
+                    Your query returned no results. Try adjusting your filters or selected fields.
+                </p>
+            </div>
+        )
+    }
     return (
         <div className="overflow-hidden h-full px-3">
             <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
                 Query Results ({records.length} records)
             </div>
-        <div className="overflow-x-auto">
-            <table className="border-collapse text-sm">
-                <thead className="bg-gray-100">
-                    {table.getHeaderGroups().map(hg => (
-                        <tr key={hg.id}>
-                            {hg.headers.map(header => (
-                                <th key={header.id}
-                                    className="border border-gray-300 px-2 py-1"
-                                >
-                                    {flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext()
-                                    )}
-                                </th>
-                            ))}
-                        </tr>
-                    ))}
-                </thead>
-                <tbody>
-                    {table.getRowModel().rows.map(row => (
-                        <tr key={row.id} className="bg-white hover:bg-orange-50">
-                            {row.getVisibleCells().map(cell => (
-                                <td key={cell.id} 
-                                    className="border border-gray-300 w-52 text-md px-2 py-1"
-                                >
-                                    <div className="truncate w-52">
+            <div className="overflow-x-auto">
+                <table className="border-collapse text-sm">
+                    <thead className="bg-gray-100">
+                        {table.getHeaderGroups().map(hg => (
+                            <tr key={hg.id}>
+                                {hg.headers.map(header => (
+                                    <th key={header.id}
+                                        className="border border-gray-300 px-2 py-1"
+                                    >
                                         {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
+                                            header.column.columnDef.header,
+                                            header.getContext()
                                         )}
-                                    </div>
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody>
+                        {table.getRowModel().rows.map(row => (
+                            <tr key={row.id} className="bg-white hover:bg-orange-50">
+                                {row.getVisibleCells().map(cell => (
+                                    <td key={cell.id} 
+                                        className="border border-gray-300 w-52 h-7 text-md px-2 py-1"
+                                    >
+                                        <div className="truncate w-52">
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </div>
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

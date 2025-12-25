@@ -46,7 +46,7 @@ export const refreshAccessToken = async (userId: string) => {
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
         redirect_uri: REDIRECT_URI,
-        code: refreshToken
+        refresh_token: refreshToken
     });
 
     await exchangeOAuthGrantForTokens(userId, authData);

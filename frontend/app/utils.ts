@@ -37,8 +37,8 @@ export const LoadProperties = async (token: string, objectType: string): Promise
     return response.data.payload;
 }
 
-export const LoadContacts = async (token: string, params: any): Promise<any> => {
-    const response = await axios.post(`${BACKEND_URL}/hubspot/crm/contacts`, {
+export const LoadRecords = async (token: string, objectType: string, params: any): Promise<any> => {
+    const response = await axios.post(`${BACKEND_URL}/hubspot/crm/records/${objectType}`, {
         params 
     }, {
         headers: {

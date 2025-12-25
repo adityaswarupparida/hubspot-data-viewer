@@ -2,17 +2,19 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { LuDatabase } from "react-icons/lu";
 import { CRMObjectRecord, DataTable } from "./DataTable";
-import { LoadContacts, LoadObjects } from "../utils";
+import { LoadRecords, LoadObjects } from "../utils";
 import { QueryBuilder } from "./QueryBuilder";
 import { QueryContext } from "../providers/QueryProvider";
 import { Spinner } from "./Spinner";
+import { useQuery } from "../hooks/useQuery";
 
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
+    const [count, setCount] = useState<number>(0);
     // const [columns, setColumns] = useState<CRMObjectProperty[]>([]);
-    const ctx = useContext(QueryContext)
-    if (!ctx) return;
-    const { columns, setAppliedColumns, run, setRun } = ctx;
+    // const ctx = useContext(QueryContext)
+    // if (!ctx) return;
+    const { columns, setAppliedColumns, selectedObject, run, setRun } = useQuery();
 
     const [objects, setObjects] = useState<any[]>([]);
     // const [run, setRun] = useState(false);
@@ -43,15 +45,17 @@ export const HubSpotDashboard = () => {
             return;
         }
 
-        const loadContacts = async () => {
+        const loadRecords = async () => {
             const params = {
                 properties: columns.map(c => c.name),
                 limit: 100,
             }
-            const payload = await LoadContacts(token, params);
+            const payload = await LoadRecords(token, selectedObject, params);
             if (!payload) return;
             if (payload.records) 
                 setData(payload.records);
+            if (payload.count > 0)
+                setCount(payload.count);
 
             displayRef.current = true;
             setLoading(false);
@@ -59,7 +63,7 @@ export const HubSpotDashboard = () => {
         }
 
         setAppliedColumns(columns);
-        loadContacts();
+        loadRecords();
 
     }, [run])
 
@@ -74,7 +78,7 @@ export const HubSpotDashboard = () => {
                         <Spinner size="lg"/>
                     </div>
                 }
-                { !loading && displayRef.current && <DataTable records={data} />}
+                { !loading && displayRef.current && <DataTable records={data} count={count} />}
                 { !loading && !displayRef.current && 
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                         <LuDatabase className="h-16 w-16 mb-4 opacity-20" />
