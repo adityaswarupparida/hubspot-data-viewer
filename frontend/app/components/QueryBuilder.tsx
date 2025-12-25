@@ -2,10 +2,9 @@
 import { FaPlay } from "react-icons/fa6";
 import { RiDeleteBin5Line } from "react-icons/ri";
 import { CRMObjectProperty } from "./DataTable";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Select from 'react-select';
 import { selectStyles } from "./styles/reactSelect";
-import { QueryContext } from "../providers/QueryProvider";
 import { LoadProperties } from "../utils";
 import { Spinner } from "./Spinner";
 import { useQuery } from "../hooks/useQuery";
@@ -25,16 +24,13 @@ export type Query = {
 export const QueryBuilder = ({ objects }: {
     objects: any[], 
 }) => {
-    // const ctx = useContext(QueryContext)
-    // if (!ctx) return;
+
     const { columns, setColumns, selectedObject, setSelectedObject, run, setRun } = useQuery();
     const [properties, setProperties] = useState<CRMObjectProperty[]>([]);
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
-    const [selected, setSelected] = useState<string[]>([]);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
-    // const [selectedObject, setSelectedObject] = useState<string>("");
     const [query, setQuery] = useState<Partial<Query> | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -94,7 +90,10 @@ export const QueryBuilder = ({ objects }: {
         }
 
         const newQuery: Partial<Query> = { object_type: selectedObject, properties: [], limit: 100 };
+        setColumns([]);
         setQuery(newQuery);
+        if (selectAll)
+            setSelectAll(s => !s)
         loadProperties();
     }, [selectedObject]);
 
@@ -117,11 +116,7 @@ export const QueryBuilder = ({ objects }: {
                         className={`text-sm`}
                         classNames={{ 
                             control: () => `min-h-8 h-8`,
-                            // valueContainer: () => `p-0`,
-                            // input: () => `p-0 text-sm`,
                             indicatorSeparator: () => `hidden`,
-                            // menu: () => `p-0`,
-                            // menuList: () => `p-0`,
                             // option: (state) => `p-0 text-sm
                             // ${state.isFocused ? `bg-orange-100`: ``}
                             // ${state.isSelected ? `bg-orange-200`: ``}
@@ -193,7 +188,6 @@ export const QueryBuilder = ({ objects }: {
                             <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs"
                                 onClick={() => {
                                     if (!selectAll) {
-                                        setSelected(properties.map(p => p.name));
                                         setColumns(properties);
                                         setQuery(prev => ({
                                             ...prev, 
@@ -201,7 +195,6 @@ export const QueryBuilder = ({ objects }: {
                                         }));
                                         setSelectAll(true);
                                     } else {
-                                        setSelected([]);
                                         setColumns([]);
                                         setQuery(prev => ({
                                             ...prev, 
@@ -220,17 +213,15 @@ export const QueryBuilder = ({ objects }: {
                                           .map(p => (
                                 <div key={p.name}>
                                     <label className="flex gap-2">
-                                        <input type="checkbox" value={p.name} className="accent-gray-200" checked={selected.includes(p.name)}
+                                        <input type="checkbox" value={p.name} className="accent-gray-200" checked={columns.includes(p)}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
-                                                    setSelected(prev => [...prev, p.name])
                                                     setColumns(prev => [...prev, p])
                                                     setQuery(prev => ({
                                                         ...prev, 
                                                         properties: [...(prev?.properties ?? []), p.name]
                                                     }));
                                                 } else {
-                                                    setSelected(prev => prev.filter(s => s !== p.name))
                                                     setColumns(prev => prev.filter(c => c.name !== p.name ))
                                                     setQuery(prev => ({
                                                         ...prev, 
@@ -249,13 +240,13 @@ export const QueryBuilder = ({ objects }: {
                                 </div>
                             }
                         </div>
-                        {selected.length > 0 && (
-                            <div className="absolute max-h-20 w-full bg-white px-1 py-2 bottom-0 left-0 flex flex-wrap gap-1 wrap-normal">
-                                {selected.slice(0, MAX_VISIBLE).map((s, index) => (
-                                    <div key={index} className="bg-gray-200 rounded-lg px-2 text-xs">{s}</div>
+                        {columns.length > 0 && (
+                            <div className="absolute max-h-24 w-full bg-white px-1 py-2 bottom-0 left-0 flex flex-wrap gap-1 wrap-normal">
+                                {columns.slice(0, MAX_VISIBLE).map((s, index) => (
+                                    <div key={index} className="bg-gray-200 rounded-lg px-2 text-xs">{s.label}</div>
                                 ))}
-                                {selected.length - MAX_VISIBLE > 0 && (
-                                    <div className="bg-gray-200 rounded-lg px-2 text-xs">+{Math.min(selected.length - MAX_VISIBLE, 10)}</div>
+                                {columns.length - MAX_VISIBLE > 0 && (
+                                    <div className="bg-gray-200 rounded-lg px-2 text-xs">+{Math.min(columns.length - MAX_VISIBLE, 10)}</div>
                                 )}
                             </div>
                         )}

@@ -37,7 +37,7 @@ export const getProperties = async (userId: string, objectType: string) => {
             }
         });
 
-        console.log(response.data);
+        // console.log(response.data);
         return response.data.results;
     } catch (err) {
         console.error(`Error while retrieving properties of ${objectType}`);
@@ -84,11 +84,11 @@ export const getRecords = async (userId: string, objectType: string, params: any
 
         console.log(response.data);
         // console.log(`Next paging link:: ` + response.data.paging.next.link);
-        if (response.data.results.length > 0)
-            console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
+        // if (response.data.results.length > 0)
+        //     console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
 
         return { 
-            count: searchResponse.data.results, 
+            count: searchResponse.data.total, 
             records: response.data.results,
         };
     } catch (err) {

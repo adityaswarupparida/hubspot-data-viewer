@@ -1,23 +1,19 @@
 "use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LuDatabase } from "react-icons/lu";
 import { CRMObjectRecord, DataTable } from "./DataTable";
 import { LoadRecords, LoadObjects } from "../utils";
 import { QueryBuilder } from "./QueryBuilder";
-import { QueryContext } from "../providers/QueryProvider";
 import { Spinner } from "./Spinner";
 import { useQuery } from "../hooks/useQuery";
 
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
     const [count, setCount] = useState<number>(0);
-    // const [columns, setColumns] = useState<CRMObjectProperty[]>([]);
-    // const ctx = useContext(QueryContext)
-    // if (!ctx) return;
+
     const { columns, setAppliedColumns, selectedObject, run, setRun } = useQuery();
 
     const [objects, setObjects] = useState<any[]>([]);
-    // const [run, setRun] = useState(false);
     const [loading, setLoading] = useState(true);
     const displayRef = useRef<boolean>(false);
 

@@ -4,8 +4,6 @@ import {
     ColumnDef, 
     flexRender
 } from "@tanstack/react-table";
-import { useContext } from "react";
-import { QueryContext } from "../providers/QueryProvider";
 import { useQuery } from "../hooks/useQuery";
 import { LuFileSearch } from "react-icons/lu";
 
@@ -51,7 +49,7 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
             set.add(key);
         }
     }
-    console.log(`Properties `, properties);
+    // console.log(`Properties `, properties);
     return properties
         .filter(p => !p.hidden && set.has(p.name))
         .map(p => ({
@@ -79,7 +77,7 @@ export const DataTable = ({ records, count }: {
         columns,
         getCoreRowModel: getCoreRowModel(),
     })
-    console.log(properties, records);
+    // console.log(properties, records);
     if (!count) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -92,11 +90,11 @@ export const DataTable = ({ records, count }: {
         )
     }
     return (
-        <div className="overflow-hidden h-full px-3">
+        <div className="overflow-hidden h-full flex flex-col px-3">
             <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
                 Query Results ({records.length} records)
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-auto flex-1">
                 <table className="border-collapse text-sm">
                     <thead className="bg-gray-100">
                         {table.getHeaderGroups().map(hg => (
