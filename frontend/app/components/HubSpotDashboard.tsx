@@ -44,7 +44,7 @@ export const HubSpotDashboard = () => {
         const loadRecords = async () => {
             const params = {
                 properties: columns.map(c => c.name),
-                limit: 100,
+                limit: 10,
             }
             const payload = await LoadRecords(token, selectedObject, params);
             if (!payload) return;

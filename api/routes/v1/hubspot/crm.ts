@@ -2,7 +2,8 @@ import Router from "express"
 import { 
     getObjects, 
     getProperties, 
-    getRecords
+    getRecords,
+    searchRecords
 } from "../../../lib/hubspot/crm";
 import { middleware } from "../../../middleware";
 
@@ -44,8 +45,11 @@ router.post("/records/:object_type", async (req, res) => {
     const userId = req.userId;
     if (!userId) return;
     const objectType = req.params.object_type;
-    const queryParams = req.body.params;
-    const response = await getRecords(userId, objectType, queryParams);
+    // Get Contacts API 
+    // const queryParams = req.body.params;
+    // Search Contacts API supporting filters
+    const queryParams = req.body;
+    const response = await searchRecords(userId, objectType, queryParams);
     res.json({
         message: `All records of ${objectType} are retrieved`,
         payload: response

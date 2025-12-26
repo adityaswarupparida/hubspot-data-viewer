@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-table";
 import { useQuery } from "../hooks/useQuery";
 import { LuFileSearch } from "react-icons/lu";
+import { useMemo } from "react";
 
 // export type DataTableProps<T> = {
 //   columns: ColumnDef<T, any>[];
@@ -46,7 +47,8 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
     const set = new Set<string>();
     if (records.length > 0) {
         for (const [key, _] of Object.entries(records[0].properties)) {
-            set.add(key);
+            if (key !== `hs_object_id`)
+                set.add(key);
         }
     }
     // console.log(`Properties `, properties);
@@ -57,7 +59,7 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
             header: p.label,
             accessorFn: (row) => row.properties[p.name],
             cell: ({ getValue }) => {
-                const value = getValue();
+                const value = getValue<string>();
                 return !value ? `` : String(value);
             },
         }));
@@ -67,11 +69,30 @@ export const DataTable = ({ records, count }: {
     records: CRMObjectRecord[],
     count: number 
 }) => {
-    // console.log(properties, records);
-    // const ctx = useContext(QueryContext)
-    // if (!ctx) return;
+
     const { appliedColumns: properties } = useQuery();
-    const columns = buildColumns(properties, records);
+    const idColumn: ColumnDef<CRMObjectRecord> = {
+        id: `hs_object_id`,
+        header: `Record ID`,
+        accessorKey: `id`,
+        cell: ({ getValue, row }) => {
+            const recordId = getValue<string>();
+            return (
+                <a 
+                    href={`${row.original.url}`} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-500 hover:underline cursor-pointer"
+                >
+                    {recordId}
+                </a>
+            )
+        }
+    }
+    const columns = useMemo<ColumnDef<CRMObjectRecord>[]>(() => 
+        [idColumn, ...buildColumns(properties, records)], 
+    [properties]);
+
     const table = useReactTable({
         data: records,
         columns,
@@ -92,7 +113,7 @@ export const DataTable = ({ records, count }: {
     return (
         <div className="overflow-hidden h-full flex flex-col px-3">
             <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
-                Query Results ({records.length} records)
+                Query Results (showing {records.length} of {count} records)
             </div>
             <div className="overflow-auto flex-1">
                 <table className="border-collapse text-sm">

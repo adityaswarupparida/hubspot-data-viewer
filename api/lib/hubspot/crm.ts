@@ -101,3 +101,35 @@ export const getRecords = async (userId: string, objectType: string, params: any
         }
     }
 }
+
+export const searchRecords = async (userId: string, objectType: string, params: any) => {
+    const token = await getAccessToken(userId);
+
+    try { 
+        const response = await axios.post(`${HUBSPOT_URL}/crm/v3/objects/${objectType}/search`, 
+            params, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        console.log(response.data); 
+        console.log(params);
+
+        if (response.data.results.length > 0)
+            console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
+
+        return { 
+            count: response.data.total, 
+            records: response.data.results,
+        };
+    } catch (err) {
+        console.error(`Error while searching ${objectType}`);
+
+        if (axios.isAxiosError(err)) {
+            console.log(`Error: ` + err.message);
+        } else {
+            console.error(err);
+        }
+    }
+}
