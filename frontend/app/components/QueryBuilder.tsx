@@ -20,7 +20,7 @@ export type FilterGroup = {
 }
 
 export type Query = {
-    object_type: string;
+    objectType: string;
     properties: string[];
     filterGroups: FilterGroup[];
     limit: number;
@@ -36,17 +36,22 @@ export const QueryBuilder = ({ objects }: {
     const [selectAll, setSelectAll] = useState<boolean>(false);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
-    // const [query, setQuery] = useState<Partial<Query> | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const MAX_VISIBLE = 8;
+    const QUERY_LIMIT = 100;
     const options = !properties.length ? [] : 
         properties.map(p => ({ value: p.name, label: p.label}));
     
     const objectOptions = !objects.length ? [
+        { value: 'carts', label: 'Carts' },
         { value: 'contacts', label: 'Contacts' },
         { value: 'companies', label: 'Companies' },
         { value: 'deals', label: 'Deals' },
+        { value: 'invoices', label: 'Invoices' },
+        { value: 'line_items', label: 'Line Items' },
+        { value: 'orders', label: 'Orders' },
+        { value: 'products', label: 'Products' },
         { value: 'tickets', label: 'Tickets' }
     ] : objects.map(o => ({ value: o.name, label: o.labels.plural }));
     
@@ -60,17 +65,22 @@ export const QueryBuilder = ({ objects }: {
     ]
 
     const addFilter = () => {
-        const filter = { 
+        const filter: FilterRule = { 
             operator: "", 
             propertyName: "", 
             value: "" 
         };
-        if (!filters.length){
-            setQuery(prev => ({
-                ...prev,
-                filterGroups: [{ filters: [filter] }]
-            }))
-        }
+        
+        const group = 0 // for now, there is one group i.e groupIndex = 0
+        setQuery(prev => ({
+            ...prev,
+            filterGroups: prev?.filterGroups?.map((grp, grpIdx) => 
+                    grpIdx !== group ? 
+                    grp : {
+                        ...grp,
+                        filters: [...grp.filters, filter ]
+                    })
+        }))
         setFilters(prev => [
             ...prev,
             filter
@@ -83,7 +93,7 @@ export const QueryBuilder = ({ objects }: {
                 idx === index ? {...f, ...patch} : f
             )
         );
-        // console.log(filters);
+
         const group = 0 // for now, there is one group i.e groupIndex = 0
         setQuery(prev => {
             if (!prev || !prev.filterGroups) return prev;
@@ -132,7 +142,8 @@ export const QueryBuilder = ({ objects }: {
             setLoading(false);
         }
 
-        const newQuery: Partial<Query> = { object_type: selectedObject, properties: [], limit: 100 };
+        const newQuery: Partial<Query> = { objectType: selectedObject, properties: [], limit: QUERY_LIMIT };
+        setFilters([]);
         setColumns([]);
         setQuery(newQuery);
         if (selectAll)
@@ -297,66 +308,69 @@ export const QueryBuilder = ({ objects }: {
                     <div className="font-semibold tracking-tight">Filters (Optional)</div>
                     <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs" onClick={addFilter}>+ Add Filter</button>
                 </div>
-                <div className="px-3 max-h-24 overflow-y-auto scrollbar-hover">
-                    {filters.length > 0 &&
-                        filters.map((f, index) => (
-                    
-                        <div key={index} className="flex justify-between items-center py-1">
-                            <div className="flex justify-between gap-2 text-xs">
-                                <Select
-                                    className="w-32"
-                                    backspaceRemovesValue={false}
-                                    components={{ DropdownIndicator: null , IndicatorSeparator: null }}
-                                    // controlShouldRenderValue={false}
-                                    hideSelectedOptions={false}
-                                    isClearable={false}
-                                    onChange={(newValue: any) => { 
-                                        console.log(newValue);
-                                        updateFilter(index, { propertyName: newValue.value } ) 
-                                    }}
-                                    options={options}
-                                    placeholder="First Name"
-                                    styles={selectStyles}
-                                    // tabSelectsValue={false}
-                                    value={options.find(op => op.value === f.propertyName) ?? ``}
-                                />
-                                <Select
-                                    className="w-24"
-                                    // autoFocus
-                                    backspaceRemovesValue={false}
-                                    components={{ DropdownIndicator: null , IndicatorSeparator: null }}
-                                    // controlShouldRenderValue={false}
-                                    hideSelectedOptions={false}
-                                    isClearable={false}
-                                    onChange={(newValue: any) => updateFilter(index, { operator: newValue.value })}
-                                    options={operatorOptions}
-                                    placeholder="equals to"
-                                    styles={selectStyles}
-                                    // tabSelectsValue={false}
-                                    value={operatorOptions.find(op => op.value === f.operator) ?? ``}
-                                />
-                                <input type="text" placeholder="John"
-                                    className="border w-28 border-gray-300 p-2 rounded focus:outline-1 hover:border-orange-500 outline-orange-500"
-                                    value={f.value}
-                                    onChange={(e) => updateFilter(index, { value: e.target.value })} 
-                                />
-                            </div>
-                            <RiDeleteBin5Line className="text-gray-400 cursor-pointer hover:text-red-600" scale={1.25} onClick={() => removeFilter(index)}/>
-                        </div>
+                <div className="overflow-y-auto max-h-96 scrollbar-hover">
+                    <div className="px-3">
+                        {filters.length > 0 &&
+                            filters.map((f, index) => (
                         
-                        ))
-                    }
+                            <div key={index} className="flex justify-between items-center py-1">
+                                <div className="flex justify-between gap-2 text-xs">
+                                    <Select
+                                        className="w-32"
+                                        backspaceRemovesValue={false}
+                                        components={{ DropdownIndicator: null , IndicatorSeparator: null }}
+                                        // controlShouldRenderValue={false}
+                                        hideSelectedOptions={false}
+                                        isClearable={false}
+                                        onChange={(newValue: any) => { 
+                                            console.log(newValue);
+                                            updateFilter(index, { propertyName: newValue.value } ) 
+                                        }}
+                                        options={options}
+                                        placeholder="First Name"
+                                        styles={selectStyles}
+                                        // tabSelectsValue={false}
+                                        value={options.find(op => op.value === f.propertyName) ?? ``}
+                                    />
+                                    <Select
+                                        className="w-24"
+                                        // autoFocus
+                                        backspaceRemovesValue={false}
+                                        components={{ DropdownIndicator: null , IndicatorSeparator: null }}
+                                        // controlShouldRenderValue={false}
+                                        hideSelectedOptions={false}
+                                        isClearable={false}
+                                        onChange={(newValue: any) => updateFilter(index, { operator: newValue.value })}
+                                        options={operatorOptions}
+                                        placeholder="equals to"
+                                        styles={selectStyles}
+                                        // tabSelectsValue={false}
+                                        value={operatorOptions.find(op => op.value === f.operator) ?? ``}
+                                    />
+                                    <input type="text" placeholder="John"
+                                        className="border w-28 border-gray-300 p-2 rounded focus:outline-1 hover:border-orange-500 outline-orange-500"
+                                        value={f.value}
+                                        onChange={(e) => updateFilter(index, { value: e.target.value })} 
+                                    />
+                                </div>
+                                <RiDeleteBin5Line className="text-gray-400 cursor-pointer hover:text-red-600" scale={1.25} onClick={() => removeFilter(index)}/>
+                            </div>
+                            
+                            ))
+                        }
+                    </div>
+                    {showQuery && <div className="mt-2 mb-3 px-3">
+                        <div className="overflow-hidden">
+                            <div className="font-semibold tracking-tight">Query (HubSpot API Format)</div>
+                            <div className="bg-gray-100 text-black font-mono rounded w-full max-h-60 overflow-auto px-6 py-4 text-xs whitespace-pre-wrap">
+                                {query && JSON.stringify(query, null, 2)}
+                                {!query && ``}
+                            </div>
+                        </div>
+                    </div>}
                 </div>
             </div>
-            {showQuery && <div className="mb-2 px-3">
-                <div className="overflow-hidden">
-                    <div className="font-semibold tracking-tight">Query (HubSpot API Format)</div>
-                    <div className="bg-gray-100 text-black font-mono rounded w-full max-h-60 overflow-auto px-6 py-4 text-xs whitespace-pre-wrap">
-                        {query && JSON.stringify(query, null, 2)}
-                        {!query && ``}
-                    </div>
-                </div>
-            </div>}
+
             <div className="absolute bottom-0 left-0 w-full px-3 pb-2">
                 <button className="flex gap-2 w-full items-center border py-2 justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600/30 disabled:cursor-not-allowed rounded cursor-pointer text-white font-bold text-sm"
                     onClick={() => setRun(true)}

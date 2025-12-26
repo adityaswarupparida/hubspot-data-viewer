@@ -17,11 +17,10 @@ export const getObjects = async (userId: string) => {
         return response.data.results;
     } catch (err) {
         console.error(`Error while retrieving objects`);
-
         if (axios.isAxiosError(err)) {
-            console.log(`Error: ` + err.message);
+            console.error(`Error ${err.status}: ` + err.response?.data.message);
         } else {
-            console.error(err);
+            console.error("An unexpected error occurred", err);
         }
     }
 }
@@ -41,11 +40,10 @@ export const getProperties = async (userId: string, objectType: string) => {
         return response.data.results;
     } catch (err) {
         console.error(`Error while retrieving properties of ${objectType}`);
-
         if (axios.isAxiosError(err)) {
-            console.log(`Error: ` + err.message);
+            console.error(`Error ${err.status}: ` + err.response?.data.message);
         } else {
-            console.error(err);
+            console.error("An unexpected error occurred", err);
         }
     }
 }
@@ -125,11 +123,10 @@ export const searchRecords = async (userId: string, objectType: string, params: 
         };
     } catch (err) {
         console.error(`Error while searching ${objectType}`);
-
         if (axios.isAxiosError(err)) {
-            console.log(`Error: ` + err.message);
+            console.error(`Error ${err.status}: ` + err.response?.data.message);
         } else {
-            console.error(err);
+            console.error("An unexpected error occurred", err);
         }
     }
 }
