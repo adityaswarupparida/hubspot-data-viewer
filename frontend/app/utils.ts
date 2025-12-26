@@ -15,6 +15,16 @@ export const CheckAccess = async (token: string): Promise<boolean> => {
     return response.data.active;
 }
 
+export const GetAuthorized = async (token: string): Promise<string> => {
+    const response = await axios.post(`${BACKEND_URL}/hubspot/authorize`, {}, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    return response.data.redirectUrl;
+}
+
 export const LoadObjects = async (token: string): Promise<any> => {
     const response = await axios.get(`${BACKEND_URL}/hubspot/crm/objects`, {
         headers: {

@@ -1,15 +1,17 @@
 "use client"
 import { FaHubspot } from "react-icons/fa";
-import { BACKEND_URL } from "../config";
-import { useEffect, useState } from "react";
-import { CheckAccess } from "../utils";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { CheckAccess, GetAuthorized } from "../utils";
 import { HubSpotDashboard } from "./HubSpotDashboard";
 import { QueryContextProvider } from "../providers/QueryProvider";
 import { Spinner } from "./Spinner";
 
 export const Dashboard = () => {
     const [hasAccess, setHasAccess] = useState(false);
+    const tokenRef = useRef<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -18,6 +20,7 @@ export const Dashboard = () => {
             setLoading(false);
             return;
         }
+        tokenRef.current = token;
 
         const checkAccess = async () => {
             const flag =  await CheckAccess(token);
@@ -28,8 +31,12 @@ export const Dashboard = () => {
         checkAccess()
     }, []);
 
-    const handleHubSpotAuth = () => {
-        window.location.href = `${BACKEND_URL}/hubspot/authorize`;
+    const handleHubSpotAuth = async () => {
+        if (!tokenRef.current)
+            return;
+
+        const url = await GetAuthorized(tokenRef.current);
+        router.push(url);
     }
 
     if (loading) {

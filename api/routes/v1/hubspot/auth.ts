@@ -24,7 +24,9 @@ router.post("/authorize", middleware, (req, res) => {
         `&state=${encodeURIComponent(STATE)}`;
 
     console.log(authUrl);
-    res.redirect(authUrl);
+    res.json({
+        redirectUrl: authUrl
+    });
 });
 
 router.get("/oauth-callback", async (req, res) => {
