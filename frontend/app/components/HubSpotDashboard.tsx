@@ -10,14 +10,16 @@ import { useQuery } from "../hooks/useQuery";
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
     const [count, setCount] = useState<number>(0);
-
-    const { columns, setAppliedColumns, selectedObject, run, setRun } = useQuery();
-
+    const { columns, setAppliedColumns, selectedObject, query, run, setRun } = useQuery();
     const [objects, setObjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const displayRef = useRef<boolean>(false);
+    const fetchRef = useRef<boolean>(false);   // prevent re-renders
 
     useEffect(() => {
+        if (fetchRef.current) return;
+        fetchRef.current = true;
+
         const token = localStorage.getItem("token");
         if (!token) {
             return;
@@ -42,9 +44,12 @@ export const HubSpotDashboard = () => {
         }
 
         const loadRecords = async () => {
-            const params = {
-                properties: columns.map(c => c.name),
-                limit: 10,
+            let params: any = {
+                properties: query?.properties,
+                limit: query?.limit,
+            }
+            if (query?.filterGroups) {
+                params = { ...params, filterGroups: query.filterGroups };
             }
             const payload = await LoadRecords(token, selectedObject, params);
             if (!payload) return;

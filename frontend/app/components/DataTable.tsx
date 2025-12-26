@@ -51,7 +51,6 @@ const buildColumns = (properties: CRMObjectProperty[], records: CRMObjectRecord[
                 set.add(key);
         }
     }
-    // console.log(`Properties `, properties);
     return properties
         .filter(p => !p.hidden && set.has(p.name))
         .map(p => ({
@@ -113,7 +112,7 @@ export const DataTable = ({ records, count }: {
     return (
         <div className="overflow-hidden h-full flex flex-col px-3">
             <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
-                Query Results (showing {records.length} of {count} records)
+                Query Results <span className="font-medium tracking-tight">(showing {records.length} of {count} records)</span>
             </div>
             <div className="overflow-auto flex-1">
                 <table className="border-collapse text-sm">

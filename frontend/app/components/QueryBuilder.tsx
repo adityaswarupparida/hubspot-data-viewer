@@ -10,14 +10,19 @@ import { Spinner } from "./Spinner";
 import { useQuery } from "../hooks/useQuery";
 
 type FilterRule = {
-    field: string;
-    operator: number;
-    value: string;
+    propertyName: string;
+    operator: string;
+    value: string | string[];
+}
+
+export type FilterGroup = {
+    filters: FilterRule[];
 }
 
 export type Query = {
     object_type: string;
     properties: string[];
+    filterGroups: FilterGroup[];
     limit: number;
 }
 
@@ -25,13 +30,13 @@ export const QueryBuilder = ({ objects }: {
     objects: any[], 
 }) => {
 
-    const { columns, setColumns, selectedObject, setSelectedObject, run, setRun } = useQuery();
+    const { columns, setColumns, selectedObject, setSelectedObject, query, setQuery, run, setRun } = useQuery();
     const [properties, setProperties] = useState<CRMObjectProperty[]>([]);
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
     const [fieldFilter, setFieldFilter] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
-    const [query, setQuery] = useState<Partial<Query> | null>(null);
+    // const [query, setQuery] = useState<Partial<Query> | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const MAX_VISIBLE = 8;
@@ -46,18 +51,29 @@ export const QueryBuilder = ({ objects }: {
     ] : objects.map(o => ({ value: o.name, label: o.labels.plural }));
     
     const operatorOptions = [
-        { id: 1, value: 'EQ', label: 'equals to' },
-        { id: 2, value: 'NEQ', label: 'not equals to' },
-        { id: 3, value: 'GT', label: 'greater than' },
-        { id: 4, value: 'GTE', label: 'greater than or equal to' },
-        { id: 5, value: 'LT', label: 'less than' },
-        { id: 6, value: 'LTE', label: 'less than or equal to' },
+        { value: 'EQ', label: 'equals to' },
+        { value: 'NEQ', label: 'not equals to' },
+        { value: 'GT', label: 'greater than' },
+        { value: 'GTE', label: 'greater than or equal to' },
+        { value: 'LT', label: 'less than' },
+        { value: 'LTE', label: 'less than or equal to' },
     ]
 
     const addFilter = () => {
+        const filter = { 
+            operator: "", 
+            propertyName: "", 
+            value: "" 
+        };
+        if (!filters.length){
+            setQuery(prev => ({
+                ...prev,
+                filterGroups: [{ filters: [filter] }]
+            }))
+        }
         setFilters(prev => [
             ...prev,
-            { field: "", operator: 0, value: "" }
+            filter
         ]);
     };
 
@@ -67,9 +83,36 @@ export const QueryBuilder = ({ objects }: {
                 idx === index ? {...f, ...patch} : f
             )
         );
+        // console.log(filters);
+        const group = 0 // for now, there is one group i.e groupIndex = 0
+        setQuery(prev => {
+            if (!prev || !prev.filterGroups) return prev;
+
+            // console.log('fg', prev.filterGroups);
+            // console.log('fgg', prev.filterGroups[group].filters);
+            return {
+                ...prev,
+                filterGroups: prev.filterGroups.map((grp, grpIdx) => 
+                    grpIdx !== group ? 
+                    grp : {
+                        ...grp,
+                        filters: grp.filters.map((f, idx) =>
+                            idx === index ? 
+                            {...f, ...patch} : f
+                        )
+                    })
+            }            
+        });
     };
 
     const removeFilter = (index: number) => {
+        if (filters.length == 1){
+            setQuery(prev => {
+                if (!prev) return prev;
+                const { filterGroups, ...rest } = prev;
+                return rest;
+            })
+        }
         setFilters(prev => prev.filter((_, idx) => idx !== index));
     }
     
@@ -162,10 +205,6 @@ export const QueryBuilder = ({ objects }: {
                                 ...base,
                                 padding: "4px",
                             }),
-                            // indicatorSeparator: (base) => ({
-                            //     ...base,
-                            //     visibility: "hidden"
-                            // }),
                             option: (base, state) => ({
                                 ...base,
                                 padding: "4px 8px",
@@ -273,13 +312,13 @@ export const QueryBuilder = ({ objects }: {
                                     isClearable={false}
                                     onChange={(newValue: any) => { 
                                         console.log(newValue);
-                                        updateFilter(index, { field: newValue.value } ) 
+                                        updateFilter(index, { propertyName: newValue.value } ) 
                                     }}
                                     options={options}
                                     placeholder="First Name"
                                     styles={selectStyles}
                                     // tabSelectsValue={false}
-                                    value={options.find(op => op.value === f.field) ?? ``}
+                                    value={options.find(op => op.value === f.propertyName) ?? ``}
                                 />
                                 <Select
                                     className="w-24"
@@ -289,12 +328,12 @@ export const QueryBuilder = ({ objects }: {
                                     // controlShouldRenderValue={false}
                                     hideSelectedOptions={false}
                                     isClearable={false}
-                                    onChange={(newValue: any) => updateFilter(index, { operator: newValue.id })}
+                                    onChange={(newValue: any) => updateFilter(index, { operator: newValue.value })}
                                     options={operatorOptions}
                                     placeholder="equals to"
                                     styles={selectStyles}
                                     // tabSelectsValue={false}
-                                    value={!f.operator ? ``: operatorOptions[f.operator - 1]}
+                                    value={operatorOptions.find(op => op.value === f.operator) ?? ``}
                                 />
                                 <input type="text" placeholder="John"
                                     className="border w-28 border-gray-300 p-2 rounded focus:outline-1 hover:border-orange-500 outline-orange-500"
