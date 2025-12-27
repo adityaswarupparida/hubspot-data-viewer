@@ -74,12 +74,14 @@ export const QueryBuilder = ({ objects }: {
         const group = 0 // for now, there is one group i.e groupIndex = 0
         setQuery(prev => ({
             ...prev,
-            filterGroups: prev?.filterGroups?.map((grp, grpIdx) => 
+            filterGroups: prev?.filterGroups ? 
+                (prev?.filterGroups).map((grp, grpIdx) => 
                     grpIdx !== group ? 
                     grp : {
                         ...grp,
                         filters: [...grp.filters, filter ]
-                    })
+                    }
+                ) : [{ filters: [filter] }]
         }))
         setFilters(prev => [
             ...prev,
