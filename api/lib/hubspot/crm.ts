@@ -4,7 +4,7 @@ import { getAccessToken } from "./auth";
 
 export const getObjects = async (userId: string) => {
     const token = await getAccessToken(userId);
-    console.log(token);
+    // console.log(token);
 
     try {
         const response = await axios.get(`${HUBSPOT_URL}/crm-object-schemas/v3/schemas`, {
@@ -112,14 +112,15 @@ export const searchRecords = async (userId: string, objectType: string, params: 
             }
         });
         console.log(response.data); 
-        console.log(params);
+        console.debug(JSON.stringify(params, null, 2));
 
-        if (response.data.results.length > 0)
-            console.log(`Properties:: ` + JSON.stringify(response.data.results[0].properties));
+        if (response.data.paging)
+            console.log(`Paging:: ` + JSON.stringify(response.data.paging));
 
         return { 
             count: response.data.total, 
             records: response.data.results,
+            paging: response.data.paging
         };
     } catch (err) {
         console.error(`Error while searching ${objectType}`);

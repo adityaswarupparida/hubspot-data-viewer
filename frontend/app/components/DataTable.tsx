@@ -7,6 +7,7 @@ import {
 import { useQuery } from "../hooks/useQuery";
 import { LuFileSearch } from "react-icons/lu";
 import { useMemo } from "react";
+import { Spinner } from "./Spinner";
 
 // export type DataTableProps<T> = {
 //   columns: ColumnDef<T, any>[];
@@ -69,7 +70,7 @@ export const DataTable = ({ records, count }: {
     count: number 
 }) => {
 
-    const { appliedColumns: properties } = useQuery();
+    const { appliedColumns: properties, loadAll, setLoadAll, nextPageRef } = useQuery();
     const idColumn: ColumnDef<CRMObjectRecord> = {
         id: `hs_object_id`,
         header: `Record ID`,
@@ -111,8 +112,17 @@ export const DataTable = ({ records, count }: {
     }
     return (
         <div className="overflow-hidden h-full flex flex-col px-3">
-            <div className="text-lg tracking-tighter font-semibold pt-2 pb-3">
-                Query Results <span className="font-medium tracking-tight">(showing {records.length} of {count} records)</span>
+            <div className="pt-2 pb-3 h-14 flex items-center gap-3">
+                <div className="text-lg tracking-tighter font-semibold ">
+                    Query Results <span className="font-medium tracking-tight">(showing {records.length} of {count} records)</span>
+                </div>
+                {nextPageRef.current?.length && <button className="flex gap-2 w-32 h-9 items-center border py-2 text-xs px-4 justify-center tracking-tight bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600/30 disabled:cursor-not-allowed rounded cursor-pointer text-white font-bold"
+                    onClick={() => setLoadAll(true)}
+                    disabled={loadAll}
+                >
+                    {!loadAll && `Load All Records` }
+                    {loadAll && <Spinner size="xs" /> }
+                </button>}
             </div>
             <div className="overflow-auto flex-1">
                 <table className="border-collapse text-sm">

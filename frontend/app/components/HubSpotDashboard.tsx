@@ -10,7 +10,7 @@ import { useQuery } from "../hooks/useQuery";
 export const HubSpotDashboard = () => {
     const [data, setData] = useState<CRMObjectRecord[]>([]);
     const [count, setCount] = useState<number>(0);
-    const { columns, setAppliedColumns, selectedObject, query, run, setRun } = useQuery();
+    const { columns, setAppliedColumns, selectedObject, query, loadAll, setLoadAll, nextPageRef, run, setRun } = useQuery();
     const [objects, setObjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const displayRef = useRef<boolean>(false);
@@ -57,7 +57,10 @@ export const HubSpotDashboard = () => {
                 setData(payload.records);
             if (payload.count > 0)
                 setCount(payload.count);
-
+            if (payload.paging && payload.paging.next)
+                nextPageRef.current = payload.paging.next.after;
+ 
+            console.log(nextPageRef.current);
             displayRef.current = true;
             setLoading(false);
             setRun(false);
@@ -67,6 +70,39 @@ export const HubSpotDashboard = () => {
         loadRecords();
 
     }, [run])
+
+    useEffect(() => {
+        if (!loadAll) return;
+        const token = localStorage.getItem("token");
+        if (!token) {
+            return;
+        }
+
+        const loadAllRecords = async () => {
+            while (nextPageRef.current) {
+                let params: any = {
+                    after: nextPageRef.current,
+                    properties: query?.properties,
+                    limit: query?.limit,
+                }
+                if (query?.filterGroups) {
+                    params = { ...params, filterGroups: query.filterGroups };
+                }
+                const payload = await LoadRecords(token, selectedObject, params);
+                if (!payload) return;
+                if (payload.records) 
+                    setData(data => [...data, ...payload.records]);
+
+                nextPageRef.current = undefined;
+                if (payload.paging && payload.paging.next)
+                    nextPageRef.current = payload.paging.next.after;
+            }
+            setLoadAll(false);    
+        }
+
+        loadAllRecords();
+        
+    }, [loadAll])
 
     return (
         <div className="w-full h-full flex gap-3 rounded-lg">

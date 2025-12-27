@@ -2,7 +2,9 @@ import {
     createContext, 
     Dispatch, 
     ReactNode, 
+    RefObject, 
     SetStateAction, 
+    useRef, 
     useState 
 } from 'react';
 import { CRMObjectProperty } from '../components/DataTable';
@@ -17,6 +19,9 @@ type QueryContextValue = {
     setSelectedObject: Dispatch<SetStateAction<string>>;
     query: Partial<Query> | null;
     setQuery: Dispatch<SetStateAction<Partial<Query> | null>>;
+    loadAll: boolean;
+    setLoadAll: Dispatch<SetStateAction<boolean>>;
+    nextPageRef: RefObject<string | undefined>;
 
     run: boolean;
     setRun: Dispatch<SetStateAction<boolean>>;
@@ -31,6 +36,8 @@ export const QueryContextProvider = ({ children }: {
     const [selectedObject, setSelectedObject] = useState<string>("");
     const [query, setQuery] = useState<Partial<Query> | null>(null);
     const [run, setRun] = useState<boolean>(false);
+    const [loadAll, setLoadAll] = useState<boolean>(false);
+    const nextPageRef = useRef<string | undefined>(undefined);
 
     return (
         <QueryContext.Provider 
@@ -43,6 +50,9 @@ export const QueryContextProvider = ({ children }: {
                 setSelectedObject,
                 query,
                 setQuery,
+                loadAll,
+                setLoadAll,
+                nextPageRef,
                 run,
                 setRun 
             }}
