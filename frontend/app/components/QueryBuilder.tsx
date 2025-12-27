@@ -34,7 +34,7 @@ export const QueryBuilder = ({ objects }: {
     const [properties, setProperties] = useState<CRMObjectProperty[]>([]);
     const [showQuery, setShowQuery] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
-    const [fieldFilter, setFieldFilter] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
     const [filters, setFilters] = useState<FilterRule[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -118,13 +118,37 @@ export const QueryBuilder = ({ objects }: {
     };
 
     const removeFilter = (index: number) => {
-        if (filters.length == 1){
-            setQuery(prev => {
-                if (!prev) return prev;
+        const group = 0 // for now, there is one group i.e groupIndex = 0
+
+        setQuery(prev => {
+            if (!prev || !prev.filterGroups) return prev;
+
+            const nextGroups =  prev.filterGroups
+                    .map((grp, grpIdx) => 
+                        grpIdx !== group ? 
+                        grp : {
+                            ...grp,
+                            filters: grp.filters
+                                    .filter((_, idx) => idx !== index)
+                        })
+                    .filter(grp => grp.filters.length > 0)
+            
+            // If no filters remain, remove filterGroups entirely
+            if (!nextGroups.length) {
                 const { filterGroups, ...rest } = prev;
                 return rest;
-            })
-        }
+            }
+
+            return { 
+                ...prev,
+                filterGroups: nextGroups,
+            };
+
+            // Idiomatic
+            // return nextGroups.length === 0
+            //     ? (({ filterGroups, ...rest }) => rest)(prev)
+            //     : { ...prev, filterGroups: nextGroups }
+        })
         setFilters(prev => prev.filter((_, idx) => idx !== index));
     }
     
@@ -148,6 +172,7 @@ export const QueryBuilder = ({ objects }: {
         setFilters([]);
         setColumns([]);
         setQuery(newQuery);
+        setSearch("");
         if (selectAll)
             setSelectAll(s => !s)
         loadProperties();
@@ -236,7 +261,7 @@ export const QueryBuilder = ({ objects }: {
                 <div className="h-64 w-full border border-gray-300 rounded">
                     <div className="p-1 h-full relative overflow-hidden">
                         <div className="flex justify-between gap-2 mb-1">
-                            <input type="text" className="border flex-1 px-3 py-1 text-sm border-gray-200 rounded focus:outline-2 outline-orange-500" value={fieldFilter} onChange={(e) => setFieldFilter(e.target.value)} placeholder="Search fields..."></input>
+                            <input type="text" className="border flex-1 px-3 py-1 text-sm border-gray-200 rounded focus:outline-2 outline-orange-500" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search fields..."></input>
                             <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs"
                                 onClick={() => {
                                     if (!selectAll) {
@@ -261,7 +286,7 @@ export const QueryBuilder = ({ objects }: {
                         </div>
                         <div className="h-full w-full overflow-y-auto px-2">
                             {!loading && properties.length > 0 && 
-                                properties.filter(p => !p.hidden && p.label.toLowerCase().includes(fieldFilter.toLowerCase()))
+                                properties.filter(p => !p.hidden && p.label.toLowerCase().includes(search.toLowerCase()))
                                           .map(p => (
                                 <div key={p.name}>
                                     <label className="flex gap-2">
@@ -310,7 +335,7 @@ export const QueryBuilder = ({ objects }: {
                     <div className="font-semibold tracking-tight">Filters (Optional)</div>
                     <button className="border border-gray-200 hover:border-orange-500 hover:text-orange-600 cursor-pointer rounded pl-3 pr-2 py-1 text-xs" onClick={addFilter}>+ Add Filter</button>
                 </div>
-                <div className="overflow-y-auto max-h-96 scrollbar-hover">
+                <div className="overflow-y-auto h-96 scrollbar-hover">
                     <div className="px-3">
                         {filters.length > 0 &&
                             filters.map((f, index) => (
